@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShieldAI — Autonomous WordPress Security</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            navy: { 950: '#030810', 900: '#070d1a', 800: '#0d1525', 700: '#111f35', 600: '#162847' },
+            threat: '#ef4444',
+            safe: '#10b981',
+            primary: '#3b82f6',
+            glow: '#60a5fa',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #070d1a; font-family: 'Inter', sans-serif; color: #f1f5f9; overflow-x: hidden; }
+
+    /* Glow effects */
+    .hero-glow { background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59,130,246,0.18) 0%, transparent 70%); }
+    .blue-glow { box-shadow: 0 0 40px rgba(59,130,246,0.15); }
+    .red-glow  { box-shadow: 0 0 30px rgba(239,68,68,0.15); }
+    .green-glow{ box-shadow: 0 0 30px rgba(16,185,129,0.12); }
+
+    /* Gradient borders */
+    .card-border { border: 1px solid rgba(59,130,246,0.2); }
+    .card-border:hover { border-color: rgba(59,130,246,0.5); transition: border-color 0.3s; }
+
+    /* Animated gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* Badge */
+    .badge { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); }
+
+    /* Threat badge */
+    .threat-badge { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .safe-badge   { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+    .warn-badge   { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; }
+
+    /* Grid patterns */
+    .grid-bg { background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px); background-size: 50px 50px; }
+
+    /* Section divider */
+    .section-divider { border-top: 1px solid rgba(255,255,255,0.06); }
+
+    /* Agent card pulse */
+    .pulse-dot { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* Approval card */
+    .approval-card { background: #0d1525; border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; }
+    .approval-card .diff-old { background: rgba(239,68,68,0.08); border-left: 3px solid #ef4444; }
+    .approval-card .diff-new { background: rgba(16,185,129,0.08); border-left: 3px solid #10b981; }
+
+    /* Step connector */
+    .step-line { border-left: 2px dashed rgba(59,130,246,0.3); }
+
+    /* Comparison table */
+    .compare-yes { color: #10b981; }
+    .compare-no  { color: #4b5563; }
+    .compare-partial { color: #f59e0b; }
+
+    /* Pricing cards */
+    .pricing-featured { background: linear-gradient(135deg, #0d1a35 0%, #0d1525 100%); border: 1px solid rgba(59,130,246,0.5); }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+
+    /* Nav blur */
+    .nav-blur { backdrop-filter: blur(16px); background: rgba(7,13,26,0.85); border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    /* Hover lift */
+    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(59,130,246,0.15); }
+
+    /* Mobile menu */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: block; }
+  </style>
+</head>
+
+<body class="antialiased">
+
+<!-- ── ANNOUNCEMENT BANNER ─────────────────────────────────── -->
+<div class="bg-gradient-to-r from-blue-900/60 to-purple-900/60 border-b border-blue-800/40 text-center py-2.5 text-sm font-medium text-blue-200">
+  🛡️ Now in Beta — <a href="#pricing" class="underline hover:text-white transition-colors">Join the waitlist</a> for early access and 40% off launch pricing
+</div>
+
+<!-- ── NAVIGATION ─────────────────────────────────────────── -->
+<nav class="nav-blur sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center blue-glow">
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <span class="text-white font-bold text-lg tracking-tight">ShieldAI</span>
+    </div>
+
+    <!-- Desktop Nav -->
+    <div class="hidden md:flex items-center gap-8 text-sm text-slate-400 font-medium">
+      <a href="#features"    class="hover:text-white transition-colors">Features</a>
+      <a href="#agents"      class="hover:text-white transition-colors">Agents</a>
+      <a href="#how-it-works"class="hover:text-white transition-colors">How It Works</a>
+      <a href="#technical-details" class="hover:text-white transition-colors">Tech</a>
+      <a href="#comparison"  class="hover:text-white transition-colors">Compare</a>
+      <a href="#pricing"     class="hover:text-white transition-colors">Pricing</a>
+    </div>
+
+    <!-- CTA -->
+    <div class="flex items-center gap-3">
+      <a href="#pricing" class="hidden md:inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+        Join Waitlist
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </a>
+      <!-- Mobile menu button -->
+      <button id="menu-toggle" class="md:hidden text-slate-400 hover:text-white" onclick="document.getElementById('mobile-menu').classList.toggle('open')">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="md:hidden px-6 pb-4 space-y-3 text-sm text-slate-400">
+    <a href="#features"     class="block hover:text-white">Features</a>
+    <a href="#agents"       class="block hover:text-white">Agents</a>
+    <a href="#how-it-works" class="block hover:text-white">How It Works</a>
+    <a href="#comparison"   class="block hover:text-white">Compare</a>
+    <a href="#pricing"      class="block hover:text-white">Pricing</a>
+    <a href="#pricing" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold mt-1">Join Waitlist</a>
+  </div>
+</nav>
+
+
+<!-- ── HERO ──────────────────────────────────────────────── -->
+<section class="hero-glow grid-bg relative overflow-hidden pt-24 pb-20 px-6">
+  <!-- Background orbs -->
+  <div class="absolute top-20 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute top-40 right-1/4 w-64 h-64 bg-purple-600/5 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-5xl mx-auto text-center relative">
+    <!-- Eyebrow -->
+    <div class="inline-flex items-center gap-2 badge rounded-full px-4 py-1.5 text-blue-300 text-sm font-medium mb-8">
+      <span class="w-2 h-2 rounded-full bg-blue-400 pulse-dot"></span>
+      Autonomous WordPress Security — Now in Beta
+    </div>
+
+    <!-- Headline -->
+    <h1 class="text-5xl md:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
+      Wordfence alerts you.<br />
+      <span class="gradient-text">ShieldAI acts.</span>
+    </h1>
+
+    <!-- Subheading -->
+    <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
+      The first autonomous security agent for WordPress. Detects threats, drafts fixes, and hardens your site — with your approval before anything goes live.
+    </p>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+      <a href="#pricing" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl text-base transition-all blue-glow hover:scale-105">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        Join the Waitlist
+      </a>
+      <a href="#how-it-works" class="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold px-8 py-4 rounded-xl text-base transition-all">
+        See How It Works
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+      <div class="text-center">
+        <div class="text-4xl font-black text-white mb-1">5M+</div>
+        <div class="text-sm text-slate-500">WordPress sites attacked daily</div>
+      </div>
+      <div class="text-center">
+        <div class="text-4xl font-black text-white mb-1">97%</div>
+        <div class="text-sm text-slate-500">of breaches are preventable with proper hardening</div>
+      </div>
+      <div class="text-center">
+        <div class="text-4xl font-black text-white mb-1">6.4h</div>
+        <div class="text-sm text-slate-500">avg. weekly time spent on manual security tasks</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── PROBLEM ──────────────────────────────────────────── -->
+<section class="section-divider py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">The Problem</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white">Security plugins leave the hard part to you</h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <!-- Problem 1 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-2">Alerts without answers</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Wordfence floods your inbox with threat notifications. You still have to Google what the alert means, find the fix, and manually implement it — often under pressure.</p>
+      </div>
+
+      <!-- Problem 2 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-2">Reactive, never proactive</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Traditional security plugins detect attacks as they happen. By the time you're notified, the attacker may already have a foothold. You need a system that hardens your site before an attack lands.</p>
+      </div>
+
+      <!-- Problem 3 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-2">Security requires expertise</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Writing firewall rules, interpreting CVE reports, and hardening server configs isn't something most site owners can do. You shouldn't need a security engineer to run a WordPress site safely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── APPROVAL QUEUE ────────────────────────────────────── -->
+<section class="section-divider py-20 px-6 grid-bg">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <!-- Left: Copy -->
+      <div>
+        <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">The Differentiator</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-5 leading-tight">
+          Every fix needs your approval.<br/>
+          <span class="text-blue-400">Nothing deploys automatically.</span>
+        </h2>
+        <p class="text-slate-400 leading-relaxed mb-6">
+          ShieldAI agents detect threats and generate precise remediation actions — but nothing touches your live site without a human decision. Every proposed change lands in a clear approval queue showing exactly what will change and why.
+        </p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3 text-sm text-slate-300">
+            <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            See the exact change before it's applied — full diff view
+          </li>
+          <li class="flex items-start gap-3 text-sm text-slate-300">
+            <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Understand what triggered the recommendation
+          </li>
+          <li class="flex items-start gap-3 text-sm text-slate-300">
+            <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Approve, edit, or dismiss — you're always in control
+          </li>
+          <li class="flex items-start gap-3 text-sm text-slate-300">
+            <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            One-click rollback for any deployed change
+          </li>
+        </ul>
+      </div>
+
+      <!-- Right: Approval Cards -->
+      <div class="space-y-4">
+        <!-- Card 1: Firewall rule -->
+        <div class="approval-card p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="threat-badge text-xs font-semibold px-2 py-0.5 rounded-full">CRITICAL</span>
+              <span class="text-white text-sm font-semibold">Firewall Rule — Brute Force Block</span>
+            </div>
+            <span class="text-slate-500 text-xs">2 min ago</span>
+          </div>
+          <p class="text-slate-400 text-xs mb-3">Detected 847 failed login attempts from IP range 185.220.x.x in the last 4 hours. Proposed rule blocks this range at .htaccess level.</p>
+          <div class="diff-old rounded px-3 py-2 text-xs text-red-300 font-mono mb-1.5">- # No rule (range unrestricted)</div>
+          <div class="diff-new rounded px-3 py-2 text-xs text-green-300 font-mono mb-3">+ Deny from 185.220.0.0/16</div>
+          <div class="flex gap-2">
+            <button class="flex-1 bg-green-600/20 hover:bg-green-600/30 border border-green-600/40 text-green-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">✓ Approve</button>
+            <button class="flex-1 bg-slate-700/40 hover:bg-slate-700/60 text-slate-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">Edit</button>
+            <button class="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">Dismiss</button>
+          </div>
+        </div>
+
+        <!-- Card 2: Plugin vuln -->
+        <div class="approval-card p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="warn-badge text-xs font-semibold px-2 py-0.5 rounded-full">HIGH</span>
+              <span class="text-white text-sm font-semibold">Plugin Vulnerability — WPForms 1.8.2</span>
+            </div>
+            <span class="text-slate-500 text-xs">1 hr ago</span>
+          </div>
+          <p class="text-slate-400 text-xs mb-3">CVE-2024-11205: SQL injection vulnerability in installed version. Patch available in v1.8.4. Recommend immediate update.</p>
+          <div class="diff-old rounded px-3 py-2 text-xs text-red-300 font-mono mb-1.5">- wpforms-lite: 1.8.2 (vulnerable)</div>
+          <div class="diff-new rounded px-3 py-2 text-xs text-green-300 font-mono mb-3">+ wpforms-lite: 1.8.4 (patched)</div>
+          <div class="flex gap-2">
+            <button class="flex-1 bg-green-600/20 hover:bg-green-600/30 border border-green-600/40 text-green-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">✓ Update Now</button>
+            <button class="flex-1 bg-slate-700/40 hover:bg-slate-700/60 text-slate-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">Schedule</button>
+            <button class="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">Ignore</button>
+          </div>
+        </div>
+
+        <!-- Card 3: Hardening -->
+        <div class="approval-card p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="safe-badge text-xs font-semibold px-2 py-0.5 rounded-full">HARDENING</span>
+              <span class="text-white text-sm font-semibold">Security Header — HSTS Missing</span>
+            </div>
+            <span class="text-slate-500 text-xs">3 hr ago</span>
+          </div>
+          <p class="text-slate-400 text-xs mb-3">HSTS header not set. Browsers allow downgrade attacks to HTTP. Adding this header forces HTTPS for 1 year and protects against MITM attacks.</p>
+          <div class="diff-old rounded px-3 py-2 text-xs text-red-300 font-mono mb-1.5">- # Strict-Transport-Security: (missing)</div>
+          <div class="diff-new rounded px-3 py-2 text-xs text-green-300 font-mono mb-3">+ Strict-Transport-Security: max-age=31536000</div>
+          <div class="flex gap-2">
+            <button class="flex-1 bg-green-600/20 hover:bg-green-600/30 border border-green-600/40 text-green-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">✓ Approve</button>
+            <button class="flex-1 bg-slate-700/40 hover:bg-slate-700/60 text-slate-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">Edit</button>
+            <button class="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-semibold py-1.5 rounded-lg transition-colors">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── AGENT SYSTEM ───────────────────────────────────────── -->
+<section id="agents" class="section-divider py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Autonomous Agents</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Four agents working around the clock</h2>
+      <p class="text-slate-400 max-w-xl mx-auto">Each agent has a dedicated job, a scheduled cadence, and a defined scope. They communicate findings to the approval queue — never to your live site directly.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Agent 1 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div>
+              <div class="text-white font-bold">Threat Response Agent</div>
+              <div class="text-slate-500 text-xs">Every 15 minutes</div>
+            </div>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-green-400 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></span>
+            Running
+          </span>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">Monitors login patterns, file integrity, and traffic anomalies in real time. When a pattern matches a known attack signature, it drafts a precise firewall rule or block action with full context.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Login monitoring</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">File integrity</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Traffic analysis</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">IP blocking</span>
+        </div>
+      </div>
+
+      <!-- Agent 2 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <div>
+              <div class="text-white font-bold">Plugin Vulnerability Agent</div>
+              <div class="text-slate-500 text-xs">Weekly scan</div>
+            </div>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-blue-400 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            Scheduled
+          </span>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">Queries the WPScan CVE database and NVD feed against every installed plugin and theme. Returns a prioritized list of vulnerabilities with patch availability, severity score, and recommended actions.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">CVE scanning</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">WPScan API</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">CVSS scoring</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Patch tracking</span>
+        </div>
+      </div>
+
+      <!-- Agent 3 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <div class="text-white font-bold">Hardening Agent</div>
+              <div class="text-slate-500 text-xs">Monthly audit</div>
+            </div>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-blue-400 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            Scheduled
+          </span>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">Audits your WordPress installation against CIS and OWASP WordPress security benchmarks. Checks file permissions, security headers, authentication keys, database prefixes, and 40+ hardening criteria. Generates ready-to-apply fix scripts for each gap.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">CIS benchmarks</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">OWASP checks</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Security headers</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">40+ criteria</span>
+        </div>
+      </div>
+
+      <!-- Agent 4 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+              <div class="text-white font-bold">Incident Report Agent</div>
+              <div class="text-slate-500 text-xs">On-trigger</div>
+            </div>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-yellow-400 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 pulse-dot"></span>
+            On-demand
+          </span>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">Activates after any detected or blocked attack. Automatically assembles a full incident timeline, identifies the attack vector, estimates potential impact, and generates a prioritized list of follow-up hardening actions to prevent recurrence.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Attack timeline</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Impact assessment</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">Root cause</span>
+          <span class="badge text-blue-300 text-xs px-2.5 py-1 rounded-full">PDF export</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── HOW IT WORKS ───────────────────────────────────────── -->
+<section id="how-it-works" class="section-divider py-20 px-6 grid-bg">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-16">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Process</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white">From threat to fix in four steps</h2>
+    </div>
+
+    <div class="space-y-0">
+      <!-- Step 1 -->
+      <div class="flex gap-6 pb-10 relative">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 blue-glow">1</div>
+          <div class="w-0.5 bg-blue-800/60 flex-1 mt-3"></div>
+        </div>
+        <div class="pb-2 pt-1">
+          <h3 class="text-white font-bold text-xl mb-2">Scan</h3>
+          <p class="text-slate-400 leading-relaxed">ShieldAI runs continuous monitoring across 12 attack vectors: login attempts, file changes, plugin CVEs, traffic anomalies, security headers, database permissions, and more. No configuration needed — it starts watching the moment you activate it.</p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flex gap-6 pb-10 relative">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 blue-glow">2</div>
+          <div class="w-0.5 bg-blue-800/60 flex-1 mt-3"></div>
+        </div>
+        <div class="pb-2 pt-1">
+          <h3 class="text-white font-bold text-xl mb-2">Analyze</h3>
+          <p class="text-slate-400 leading-relaxed">When a risk is detected, the AI agent interprets the raw data and generates a specific, actionable fix — not a generic warning. A brute force attack becomes a precise firewall rule. A CVE becomes a targeted update recommendation with severity context and patch availability.</p>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flex gap-6 pb-10 relative">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 blue-glow">3</div>
+          <div class="w-0.5 bg-blue-800/60 flex-1 mt-3"></div>
+        </div>
+        <div class="pb-2 pt-1">
+          <h3 class="text-white font-bold text-xl mb-2">Approve</h3>
+          <p class="text-slate-400 leading-relaxed">Every proposed action appears in the approval queue with: what triggered it, the exact change it would make (full diff), the risk of acting vs. not acting, and a confidence score. You approve, edit, schedule, or dismiss. No action is ever taken without your explicit decision.</p>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="flex gap-6">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-2xl bg-green-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 green-glow">4</div>
+        </div>
+        <div class="pt-1">
+          <h3 class="text-white font-bold text-xl mb-2">Harden</h3>
+          <p class="text-slate-400 leading-relaxed">Approved changes are deployed instantly via WordPress and server APIs. Every deployed action is logged with a timestamp and one-click rollback available. Your site's security posture improves continuously — without you needing to understand the technical details.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FEATURES GRID ─────────────────────────────────────── -->
+<section id="features" class="section-divider py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Features</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white">Everything a security expert would do — automatically</h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Feature 1 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+          <svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3 class="text-white font-bold mb-2">File Integrity Monitoring</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Compares every WordPress core file against known-good checksums. Detects unauthorized modifications — including injected malware in theme files — and flags them immediately.</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="w-9 h-9 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-4">
+          <svg class="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <h3 class="text-white font-bold mb-2">CVE-Based Plugin Scanning</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Cross-references your installed plugins and themes against the WPScan vulnerability database and NVD CVE feed. New CVEs are checked within 24 hours of publication.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4">
+          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <h3 class="text-white font-bold mb-2">Login Anomaly Detection</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Identifies brute force attacks, credential stuffing, and unusual login patterns. Generates targeted block rules for offending IPs, ranges, or user agents with one-click approval.</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
+          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        </div>
+        <h3 class="text-white font-bold mb-2">AI Firewall Rule Generator</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Translates threat patterns into precise .htaccess and WordPress firewall rules. Plain-English explanation included — you understand exactly what each rule does before approving.</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-4">
+          <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        </div>
+        <h3 class="text-white font-bold mb-2">Config Hardening Auditor</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Audits 40+ WordPress configuration points against CIS and OWASP benchmarks: security headers, database prefixes, auth keys, file permissions, and XML-RPC exposure.</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4">
+          <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3 class="text-white font-bold mb-2">Incident Report Generator</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">Automatically assembles post-incident reports with attack timeline, vector analysis, affected components, and actionable prevention steps. Export as PDF for clients or compliance records.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── TECHNICAL DETAILS ─────────────────────────────────── -->
+<section id="technical-details" class="section-divider py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Under the Hood</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">How ShieldAI is built</h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">ShieldAI is a WordPress plugin that wires together four mature technologies — no research-level AI required. Here's exactly how each layer works.</p>
+    </div>
+
+    <!-- Architecture Diagram (text-based) -->
+    <div class="bg-navy-800 card-border rounded-2xl p-8 mb-10">
+      <h3 class="text-white font-bold text-lg mb-6 text-center">System Architecture</h3>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-center text-center text-sm">
+        <!-- Layer 1 -->
+        <div class="bg-blue-900/30 border border-blue-700/40 rounded-xl p-4">
+          <div class="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center mx-auto mb-2">
+            <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <div class="text-blue-300 font-semibold text-xs mb-1">Data Layer</div>
+          <div class="text-slate-400 text-xs">WP DB, logs, file system, WPScan API</div>
+        </div>
+        <!-- Arrow -->
+        <div class="hidden md:flex items-center justify-center text-slate-600 text-xl">→</div>
+        <!-- Layer 2 -->
+        <div class="bg-purple-900/30 border border-purple-700/40 rounded-xl p-4">
+          <div class="w-8 h-8 rounded-lg bg-purple-600/30 flex items-center justify-center mx-auto mb-2">
+            <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div class="text-purple-300 font-semibold text-xs mb-1">Agent Runner</div>
+          <div class="text-slate-400 text-xs">WP-Cron schedules + LLM API (Claude / GPT-4)</div>
+        </div>
+        <!-- Arrow -->
+        <div class="hidden md:flex items-center justify-center text-slate-600 text-xl">→</div>
+        <!-- Layer 3 -->
+        <div class="bg-green-900/30 border border-green-700/40 rounded-xl p-4">
+          <div class="w-8 h-8 rounded-lg bg-green-600/30 flex items-center justify-center mx-auto mb-2">
+            <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="text-green-300 font-semibold text-xs mb-1">Approval Queue</div>
+          <div class="text-slate-400 text-xs">Custom WP admin UI + custom DB table</div>
+        </div>
+      </div>
+      <div class="flex justify-center mt-4">
+        <div class="flex items-center gap-3 text-xs text-slate-500">
+          <span class="w-3 h-0.5 bg-green-500 inline-block"></span> Approved actions only reach the execution layer
+        </div>
+      </div>
+      <!-- Row 2: execution -->
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 max-w-2xl mx-auto text-center text-sm">
+        <div class="bg-orange-900/20 border border-orange-700/30 rounded-xl p-4 md:col-start-2">
+          <div class="w-8 h-8 rounded-lg bg-orange-600/30 flex items-center justify-center mx-auto mb-2">
+            <svg class="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="text-orange-300 font-semibold text-xs mb-1">Executor</div>
+          <div class="text-slate-400 text-xs">WP/WooCommerce APIs, .htaccess writes, wp-config patches</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 Tech Detail Cards -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- Card 1: WordPress Plugin Shell -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          </div>
+          <div>
+            <div class="text-white font-bold text-sm">WordPress Plugin Shell</div>
+            <div class="text-slate-500 text-xs">Standard WordPress plugin</div>
+          </div>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-3">ShieldAI is distributed as a standard WordPress plugin (.zip) installable from the WP admin. It uses WP's native hook system, settings API, and custom post types — no non-standard server access required on activation.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">PHP 8.1+</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">WP 6.0+</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">OOP / PSR-4</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Data Collection -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+          </div>
+          <div>
+            <div class="text-white font-bold text-sm">Data Collection Layer</div>
+            <div class="text-slate-500 text-xs">No external agents needed</div>
+          </div>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-3">All data is already inside WordPress. Login attempts live in <code class="text-blue-300 bg-slate-800 px-1 rounded text-xs">wp_</code> tables. File checksums are compared against WordPress.org's published hashes. Installed plugins are queried via the WP Plugins API. No server-level access required.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">wpdb</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">WP Filesystem API</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">get_plugins()</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Agent Runner -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <div class="text-white font-bold text-sm">Agent Scheduler</div>
+            <div class="text-slate-500 text-xs">WP-Cron + server cron fallback</div>
+          </div>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-3">Each agent is registered as a scheduled WP-Cron event with its own cadence. For reliability on low-traffic sites, a server-side cron ping (configurable) triggers WordPress cron externally — eliminating WP-Cron's dependency on site visits.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">wp_schedule_event()</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">Action Scheduler</span>
+        </div>
+      </div>
+
+      <!-- Card 4: LLM Integration -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <div>
+            <div class="text-white font-bold text-sm">LLM Integration</div>
+            <div class="text-slate-500 text-xs">Claude API / OpenAI GPT-4o</div>
+          </div>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-3">Agents send structured JSON payloads (threat data, file diffs, CVE details) to the LLM API with precision-engineered prompts. The LLM returns structured JSON — a specific action, plain-English explanation, confidence score, and severity level. No free-form text enters the execution pipeline.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">Claude API</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">JSON mode</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">wp_remote_post()</span>
+        </div>
+      </div>
+
+      <!-- Card 5: Approval Queue & DB -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          </div>
+          <div>
+            <div class="text-white font-bold text-sm">Approval Queue</div>
+            <div class="text-slate-500 text-xs">Custom DB table + WP admin UI</div>
+          </div>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-3">Every agent recommendation is written to a custom <code class="text-blue-300 bg-slate-800 px-1 rounded text-xs">shieldai_queue</code> table with status, payload, diff, trigger context, and severity. The WP admin dashboard renders this as a review queue. No action is written to WordPress until a row's status is set to <code class="text-blue-300 bg-slate-800 px-1 rounded text-xs">approved</code>.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">$wpdb-&gt;insert()</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">WP Settings API</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">REST API</span>
+        </div>
+      </div>
+
+      <!-- Card 6: Execution & CVE Feed -->
+      <div class="bg-navy-800 card-border rounded-2xl p-5 hover-lift">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <div class="text-white font-bold text-sm">Executor + CVE Feeds</div>
+            <div class="text-slate-500 text-xs">WP APIs + public vulnerability data</div>
+          </div>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed mb-3">Approved actions are dispatched to typed executor classes: <code class="text-blue-300 bg-slate-800 px-1 rounded text-xs">HtaccessExecutor</code>, <code class="text-blue-300 bg-slate-800 px-1 rounded text-xs">PluginUpdateExecutor</code>, <code class="text-blue-300 bg-slate-800 px-1 rounded text-xs">HeaderExecutor</code>. Vulnerability data is sourced from WPScan's free API and NVD's public CVE feed — queried weekly against the site's plugin inventory.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">WPScan API</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">NVD CVE feed</span>
+          <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded font-mono">.htaccess</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Data Flow Summary -->
+    <div class="mt-8 bg-navy-800 card-border rounded-2xl p-6">
+      <h3 class="text-white font-bold mb-4">End-to-end data flow</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="text-blue-400 text-sm font-semibold mb-3">What stays on your server</h4>
+          <ul class="space-y-2 text-sm text-slate-400">
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> All WordPress data, logs, and file system contents</li>
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> The approval queue and all pending recommendations</li>
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> Executed firewall rules and configuration changes</li>
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> Full audit log of every agent action</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-blue-400 text-sm font-semibold mb-3">What leaves your server (anonymized)</h4>
+          <ul class="space-y-2 text-sm text-slate-400">
+            <li class="flex items-start gap-2"><span class="text-yellow-400 mt-0.5">→</span> Structured threat summary sent to LLM API for analysis</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-400 mt-0.5">→</span> Plugin slugs + versions sent to WPScan CVE API</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-400 mt-0.5">→</span> No raw logs, no customer data, no PII ever leaves</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ── COMPARISON TABLE ──────────────────────────────────── -->
+<section id="comparison" class="section-divider py-20 px-6 grid-bg">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Comparison</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white">ShieldAI vs. the alternatives</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10">
+            <th class="text-left py-4 pr-6 text-slate-400 font-medium w-1/2">Capability</th>
+            <th class="text-center py-4 px-4">
+              <div class="flex flex-col items-center gap-1">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                </div>
+                <span class="text-white font-bold">ShieldAI</span>
+              </div>
+            </th>
+            <th class="text-center py-4 px-4">
+              <div class="flex flex-col items-center gap-1">
+                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-slate-300 font-bold text-xs">W</div>
+                <span class="text-slate-400 font-medium">Wordfence</span>
+              </div>
+            </th>
+            <th class="text-center py-4 px-4">
+              <div class="flex flex-col items-center gap-1">
+                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-slate-300 font-bold text-xs">S</div>
+                <span class="text-slate-400 font-medium">Sucuri</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">Threat detection</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">Autonomous fix generation</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">CVE-based plugin scanning</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-partial text-base">~</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">AI-generated firewall rules</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">Approval queue (human-in-the-loop)</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">Config hardening audit (40+ checks)</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-partial text-base">~</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-partial text-base">~</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">Automated incident reports</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-partial text-base">~</span></td>
+          </tr>
+          <tr class="hover:bg-white/2 transition-colors">
+            <td class="py-4 pr-6 text-slate-300">One-click rollback</td>
+            <td class="py-4 px-4 text-center"><span class="compare-yes font-bold text-base">✓</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+            <td class="py-4 px-4 text-center"><span class="compare-no font-bold text-base">✗</span></td>
+          </tr>
+          <tr class="border-t border-blue-800/40">
+            <td class="py-4 pr-6 text-slate-400 font-medium">Starting price</td>
+            <td class="py-4 px-4 text-center text-white font-bold">Free</td>
+            <td class="py-4 px-4 text-center text-slate-400">Free</td>
+            <td class="py-4 px-4 text-center text-slate-400">Free</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="text-slate-600 text-xs mt-3">~ = Partial or manual implementation required</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── USE CASES ─────────────────────────────────────────── -->
+<section class="section-divider py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Use Cases</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white">Built for every WordPress operator</h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <!-- Solo Creators -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-1">Solo Bloggers & Creators</h3>
+        <p class="text-blue-400 text-sm mb-4 font-medium">From $0/month</p>
+        <p class="text-slate-400 text-sm mb-4 leading-relaxed">Stop worrying about whether your site is secure. ShieldAI runs in the background and surfaces only the things that need a decision — not a 47-item checklist you'll never action.</p>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>No security expertise needed</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Weekly digest of what was blocked</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Activate and forget</li>
+        </ul>
+      </div>
+
+      <!-- WooCommerce -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-1">WooCommerce Stores</h3>
+        <p class="text-green-400 text-sm mb-4 font-medium">From $79/year</p>
+        <p class="text-slate-400 text-sm mb-4 leading-relaxed">A single breach can expose customer payment data and destroy your store's reputation overnight. ShieldAI continuously hardens your checkout, monitors for skimming scripts, and keeps your PCI posture clean.</p>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Checkout endpoint monitoring</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Script injection detection</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>PCI compliance hardening</li>
+        </ul>
+      </div>
+
+      <!-- Agencies -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 hover-lift">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-1">WordPress Agencies</h3>
+        <p class="text-purple-400 text-sm mb-4 font-medium">From $399/year</p>
+        <p class="text-slate-400 text-sm mb-4 leading-relaxed">Manage security across 20+ client sites from a single dashboard. White-label incident reports, per-site approval queues, and team-level workflows so your whole team can triage efficiently.</p>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>20-site dashboard</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>White-label client reports</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Team approval workflows</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── PRICING ────────────────────────────────────────────── -->
+<section id="pricing" class="section-divider py-20 px-6 grid-bg">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <p class="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-3">Pricing</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Simple, transparent pricing</h2>
+      <p class="text-slate-400">Start free. Upgrade when you need more power.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <!-- Free -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 flex flex-col">
+        <div class="mb-6">
+          <div class="text-slate-400 text-sm font-medium mb-1">Free</div>
+          <div class="text-4xl font-black text-white">$0</div>
+          <div class="text-slate-500 text-xs mt-1">forever</div>
+        </div>
+        <ul class="space-y-2.5 text-sm text-slate-300 flex-1 mb-6">
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>File integrity monitoring</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Login anomaly detection</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Weekly vulnerability scan</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-slate-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-slate-600">Approval queue</span></li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-slate-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-slate-600">AI firewall rules</span></li>
+        </ul>
+        <a href="#" class="w-full block text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Get Started Free</a>
+      </div>
+
+      <!-- Shield -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 flex flex-col">
+        <div class="mb-6">
+          <div class="text-slate-400 text-sm font-medium mb-1">Shield</div>
+          <div class="text-4xl font-black text-white">$79</div>
+          <div class="text-slate-500 text-xs mt-1">per year / 1 site</div>
+        </div>
+        <ul class="space-y-2.5 text-sm text-slate-300 flex-1 mb-6">
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Everything in Free</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>All 4 AI agents</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Approval queue</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>AI firewall rule generator</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Weekly hardening reports</li>
+        </ul>
+        <a href="#" class="w-full block text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Join Waitlist</a>
+      </div>
+
+      <!-- Shield Pro (Featured) -->
+      <div class="pricing-featured rounded-2xl p-6 flex flex-col relative">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">Most Popular</span>
+        </div>
+        <div class="mb-6">
+          <div class="text-blue-400 text-sm font-medium mb-1">Shield Pro</div>
+          <div class="text-4xl font-black text-white">$199</div>
+          <div class="text-slate-500 text-xs mt-1">per year / 1 site</div>
+        </div>
+        <ul class="space-y-2.5 text-sm text-slate-300 flex-1 mb-6">
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Everything in Shield</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Real-time threat scanning</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Incident reports (PDF export)</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Slack/email alerts</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Priority support</li>
+        </ul>
+        <a href="#" class="w-full block text-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-sm transition-colors blue-glow">Join Waitlist</a>
+      </div>
+
+      <!-- Agency -->
+      <div class="bg-navy-800 card-border rounded-2xl p-6 flex flex-col">
+        <div class="mb-6">
+          <div class="text-purple-400 text-sm font-medium mb-1">Agency</div>
+          <div class="text-4xl font-black text-white">$399</div>
+          <div class="text-slate-500 text-xs mt-1">per year / 20 sites</div>
+        </div>
+        <ul class="space-y-2.5 text-sm text-slate-300 flex-1 mb-6">
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Everything in Shield Pro</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>20-site dashboard</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>White-label reports</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Team approval workflows</li>
+          <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Dedicated success manager</li>
+        </ul>
+        <a href="#" class="w-full block text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Join Waitlist</a>
+      </div>
+    </div>
+
+    <p class="text-center text-slate-500 text-sm mt-8">All plans include a 14-day free trial. No credit card required. Cancel anytime.</p>
+  </div>
+</section>
+
+
+<!-- ── CTA BANNER ────────────────────────────────────────── -->
+<section class="section-divider py-20 px-6">
+  <div class="max-w-3xl mx-auto text-center">
+    <div class="bg-gradient-to-br from-navy-800 to-navy-700 border border-blue-800/40 rounded-3xl p-12 blue-glow">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Your site is being probed right now.</h2>
+      <p class="text-slate-400 mb-8 leading-relaxed">Every WordPress site receives hundreds of automated attack attempts daily. Most go unnoticed until it's too late. ShieldAI changes that — join the waitlist and be first to try it.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#pricing" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl text-base transition-all hover:scale-105">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          Join the Waitlist — It's Free
+        </a>
+      </div>
+      <p class="text-slate-500 text-sm mt-4">Early access members get 40% off launch pricing.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="section-divider py-12 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+      <!-- Brand -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </div>
+          <span class="text-white font-bold text-lg">ShieldAI</span>
+        </div>
+        <p class="text-slate-500 text-sm leading-relaxed max-w-xs">The autonomous WordPress security agent. Detects, fixes, and hardens — with your approval every step of the way.</p>
+      </div>
+
+      <!-- Product -->
+      <div>
+        <h4 class="text-white font-semibold text-sm mb-4">Product</h4>
+        <ul class="space-y-2.5 text-sm text-slate-500">
+          <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+          <li><a href="#agents" class="hover:text-white transition-colors">Agents</a></li>
+          <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+          <li><a href="#comparison" class="hover:text-white transition-colors">Compare</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div>
+        <h4 class="text-white font-semibold text-sm mb-4">Resources</h4>
+        <ul class="space-y-2.5 text-sm text-slate-500">
+          <li><a href="#" class="hover:text-white transition-colors">Documentation</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Security Blog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Changelog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Status</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div>
+        <h4 class="text-white font-semibold text-sm mb-4">Company</h4>
+        <ul class="space-y-2.5 text-sm text-slate-500">
+          <li><a href="#" class="hover:text-white transition-colors">About</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p class="text-slate-600 text-sm">© 2025 ShieldAI. All rights reserved.</p>
+      <p class="text-slate-600 text-sm">Built for WordPress security that actually works.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
